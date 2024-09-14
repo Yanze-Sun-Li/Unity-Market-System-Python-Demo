@@ -209,6 +209,29 @@ class FixedPriceMarketManager:
     def show_amount_popup(self, item_name, price_per_item, action):
         """Display a popup window to select the quantity to buy/sell."""
         
+        # Calculate total available currency (convert to copper for simplicity)
+        total_copper = (self.global_data_manager.gold * 10000) + (self.global_data_manager.silver * 100) + self.global_data_manager.copper
+        
+        # Calculate the maximum amount the player can afford based on the price per item
+        max_affordable_amount = total_copper // price_per_item
+        
+        # If the action is to "buy", we need to cap the maximum amount by both what the player can afford and item availability
+        if action == "buy":
+            # Find the target item to check available amount
+            target_item = next(item for item in self.global_data_manager.items_list if item['name'] == item_name)
+            available_amount = target_item['amount']
+
+            # Set the slider's maximum to the lesser of what the player can afford and what's available
+            max_amount = min(max_affordable_amount, available_amount)
+        
+        elif action == "sell":
+            # For selling, set max_amount to the player's inventory amount of the selected item
+            user_item = next((item for item in self.global_data_manager.user_items if item['name'] == item_name), None)
+            if user_item:
+                max_amount = user_item['amount']
+            else:
+                max_amount = 0
+
         def update_amount_from_slider(event=None):
             """Update the entry when the user moves the slider."""
             amount_entry.delete(0, tk.END)
@@ -219,7 +242,7 @@ class FixedPriceMarketManager:
             """Update the slider when the user types in the entry."""
             try:
                 amount = int(amount_entry.get())
-                if 1 <= amount <= 100:  # Ensure the value stays within the slider range
+                if 1 <= amount <= max_amount:  # Ensure the value stays within the valid range
                     amount_slider.set(amount)  # Update the slider to match the entry
                     update_total_price_label(amount)
                 else:
@@ -247,7 +270,7 @@ class FixedPriceMarketManager:
                     if self.backpack_manager.deduct_currency(total_price):
                         # Add the item to the user's inventory
                         target_item = next(target_item for target_item in self.global_data_manager.items_list if target_item['name'] == item_name)
-                        self.backpack_manager.add_to_inventory(target_item,amount)
+                        self.backpack_manager.add_to_inventory(target_item, amount)
                         self.backpack_manager.auto_convert_money()
                         messagebox.showinfo("Purchase Successful", f"You bought {amount}x {item_name} for {total_price} copper!")
                     else:
@@ -278,7 +301,7 @@ class FixedPriceMarketManager:
         item_label.pack(pady=10)
 
         # Slider for selecting the amount
-        amount_slider = tk.Scale(popup_window, from_=1, to=100, orient=tk.HORIZONTAL, label="Select Amount")  # Adjust max value accordingly
+        amount_slider = tk.Scale(popup_window, from_=1, to=max_amount, orient=tk.HORIZONTAL, label="Select Amount")  # Max value is set based on player's affordability and availability
         amount_slider.pack(pady=5)
         amount_slider.bind("<Motion>", update_amount_from_slider)  # Update entry when slider moves
 
@@ -303,7 +326,6 @@ class FixedPriceMarketManager:
         amount_slider.set(1)
         amount_entry.insert(0, "1")
         update_total_price_label(1)
-
 
     def on_close(self):
         self.selling_window_open = False
