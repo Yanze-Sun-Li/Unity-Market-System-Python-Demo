@@ -49,11 +49,11 @@ class GamblingPageUI:
 
         tk.Button(mystery_box_frame, text="Buy Silver Mystery Box", 
                   command=lambda: self.mystery_box.buy_mystery_box("silver")).grid(row=1, column=0, sticky="ew")
-        tk.Label(mystery_box_frame, text=f"Price: {self.mystery_box.box_details['silver']['price']} silver").grid(row=1, column=1, padx=10)
+        tk.Label(mystery_box_frame, text=f"Price: {self.mystery_box.box_details['silver']['price']/100} silver").grid(row=1, column=1, padx=10)
 
         tk.Button(mystery_box_frame, text="Buy Gold Mystery Box", 
                   command=lambda: self.mystery_box.buy_mystery_box("gold")).grid(row=2, column=0, sticky="ew")
-        tk.Label(mystery_box_frame, text=f"Price: {self.mystery_box.box_details['gold']['price']} gold").grid(row=2, column=1, padx=10)
+        tk.Label(mystery_box_frame, text=f"Price: {self.mystery_box.box_details['gold']['price']/10000} gold").grid(row=2, column=1, padx=10)
 
         # Configure grid layout to expand nicely
         self.gambling_window.grid_columnconfigure(0, weight=1)
